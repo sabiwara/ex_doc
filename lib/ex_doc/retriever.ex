@@ -367,8 +367,17 @@ defmodule ExDoc.Retriever do
   end
 
   defp source_path(module, _config) do
-    module.module_info(:compile)[:source]
-    |> String.Chars.to_string()
-    |> Path.relative_to(File.cwd!())
+    raw_path =
+      module.module_info(:compile)[:source]
+      |> String.Chars.to_string()
+
+    case Path.safe_relative(raw_path) do
+      {:ok, path} ->
+        path
+
+      :error ->
+        IO.warn("INCORRECT PATH #{raw_path}")
+        Path.relative_to(raw_path, File.cwd!())
+    end
   end
 end
