@@ -7,9 +7,21 @@ defmodule Mix.Tasks.DocsTest do
 
   @moduletag :tmp_dir
 
+  setup do
+    ExDoc.Refs.reset_warning()
+  end
+
   def run(context, args, opts) do
     opts = Keyword.put_new(opts, :output, context[:tmp_dir])
     Mix.Tasks.Docs.run(args, opts, &{&1, &2, &3})
+  end
+
+  def run_with_warning(context, args, opts) do
+    opts = Keyword.put_new(opts, :output, context[:tmp_dir])
+
+    Mix.Tasks.Docs.run(args, opts, fn _, _, _ ->
+      ExUnit.CaptureIO.capture_io(:stderr, fn -> ExDoc.Utils.warn("Some warning", []) end)
+    end)
   end
 
   test "inflects values from app and version", context do
@@ -389,5 +401,15 @@ defmodule Mix.Tasks.DocsTest do
                 ]}
              ] = run(context, [], app: :umbrella, apps_path: "apps/", docs: [ignore_apps: [:foo]])
     end)
+  end
+
+  test "succeeds when warnings but not setting warnings_as_errors", context do
+    run_with_warning(context, [], app: :ex_doc, version: "0.1.0")
+  end
+
+  test "fails when warnings and warnings_as_errors is set", context do
+    assert_raise Mix.Error, "fail due to warnings-as-errors", fn ->
+      run_with_warning(context, ["--warnings-as-errors"], app: :ex_doc, version: "0.1.0")
+    end
   end
 end

@@ -528,7 +528,7 @@ defmodule ExDoc.Formatter.HTML do
 
   defp generate_redirect(filename, config, redirect_to) do
     unless case_sensitive_file_regular?("#{config.output}/#{redirect_to}") do
-      ExDoc.Utils.warn("#{filename} redirects to #{redirect_to}, which does not exist", [])
+      Utils.warn("#{filename} redirects to #{redirect_to}, which does not exist", [])
     end
 
     content = Templates.redirect_template(config, redirect_to)

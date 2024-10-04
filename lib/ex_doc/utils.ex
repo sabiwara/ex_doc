@@ -7,10 +7,12 @@ defmodule ExDoc.Utils do
   if Version.match?(System.version(), ">= 1.14.0") do
     def warn(message, stacktrace_info) do
       IO.warn(message, stacktrace_info)
+      ExDoc.Refs.record_warning()
     end
   else
     def warn(message, _stacktrace_info) do
       IO.warn(message, [])
+      ExDoc.Refs.record_warning()
     end
   end
 

@@ -325,7 +325,8 @@ defmodule Mix.Tasks.Docs do
     language: :string,
     open: :boolean,
     output: :string,
-    proglang: :string
+    proglang: :string,
+    warnings_as_errors: :boolean
   ]
 
   @aliases [
@@ -385,16 +386,23 @@ defmodule Mix.Tasks.Docs do
 
     Mix.shell().info("Generating docs...")
 
-    for formatter <- options[:formatters] do
-      index = generator.(project, version, Keyword.put(options, :formatter, formatter))
-      Mix.shell().info([:green, "View #{inspect(formatter)} docs at #{inspect(index)}"])
+    result =
+      for formatter <- options[:formatters] do
+        index = generator.(project, version, Keyword.put(options, :formatter, formatter))
+        Mix.shell().info([:green, "View #{inspect(formatter)} docs at #{inspect(index)}"])
 
-      if cli_opts[:open] do
-        browser_open(index)
+        if cli_opts[:open] do
+          browser_open(index)
+        end
+
+        index
       end
 
-      index
+    if cli_opts[:warnings_as_errors] && ExDoc.Refs.had_warning?() do
+      Mix.raise("fail due to warnings-as-errors")
     end
+
+    result
   end
 
   defp normalize_formatters(options) do

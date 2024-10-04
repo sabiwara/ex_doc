@@ -29,12 +29,13 @@ defmodule ExDoc.Refs do
   @spec init(any()) :: {:ok, nil}
   def init(_) do
     :ets.new(@name, [:named_table, :public, :set])
-    {:ok, nil}
+    {:ok, false}
   end
 
   @spec clear() :: :ok
   def clear() do
     :ets.delete_all_objects(@name)
+    reset_warning()
     :ok
   end
 
@@ -65,6 +66,21 @@ defmodule ExDoc.Refs do
     |> insert()
 
     :ok
+  end
+
+  @spec record_warning :: :ok
+  def record_warning do
+    GenServer.cast(__MODULE__, :record_warning)
+  end
+
+  @spec had_warning? :: boolean()
+  def had_warning? do
+    GenServer.call(__MODULE__, :had_warning?)
+  end
+
+  @spec reset_warning :: :ok
+  def reset_warning do
+    GenServer.call(__MODULE__, :reset_warning)
   end
 
   defp lookup(ref) do
@@ -189,4 +205,8 @@ defmodule ExDoc.Refs do
       {{kind, module, name, arity}, visibility}
     end
   end
+
+  def handle_cast(:record_warning, _), do: {:noreply, true}
+  def handle_call(:had_warning?, _from, state), do: {:reply, state, state}
+  def handle_call(:reset_warning, _from, _state), do: {:reply, :ok, false}
 end
